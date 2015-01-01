@@ -28,6 +28,15 @@ Then proceed to using the library, happy hacking!
 
 ## Optional ##
 
+### Performance Suite ###
+
+There is an optional performance suite included, to run it type
+
+    make perf
+
+and you should see numbers around a few hundred nets per second, depending
+on your hardware.
+
 ### BLAS ###
 
 Most likely you want to use OpenBLAS as your BLAS back-end, it is fast (albeit
