@@ -11,6 +11,126 @@ few years.
 
 [julia]: http://julialang.org/
 
+# Usage #
+
+```python
+    # We will use a Stanford Sentiment Treebank-like example where we have the
+    #   phrase "This burger isn't bad" and annotate each sub-phrase of
+    #   the sentence with a sentiment label.
+    tokens = set(('This', 'burger', 'is', "n't", 'bad'))
+
+    # The dimensionality of our token representations.
+    dims = 32
+
+    from collections import OrderedDict
+    from nerv.init import random_uniform
+
+    # Mappings between each token and a randomly initialised representation.
+    reprs = OrderedDict([(t, random_uniform(dims)) for t in tokens])
+
+    # There are two core concepts, nets and models. Nets are Directed Acyclic
+    #   Graphs (DAGs) that consists of vertices of varying types. These can be
+    #   token representations, compositional, predictive, etc. A model is
+    #   simply a collection of weights that can be applied to a net.
+
+    from numpy import array
+
+    # One-hot sentiment labels as column vectors.
+    very_neg = array((1, 0, 0, 0, 0)).reshape(-1, 1)
+    neg      = array((0, 1, 0, 0, 0)).reshape(-1, 1)
+    neutral  = array((0, 0, 1, 0, 0)).reshape(-1, 1)
+    pos      = array((0, 0, 0, 1, 0)).reshape(-1, 1)
+    very_pos = array((0, 0, 0, 0, 1)).reshape(-1, 1)
+    labels = (very_neg, neg, neutral, pos, very_pos)
+
+    from nerv.net import keyed_source_vertex
+    from nerv.net import rnn_vertex
+    from nerv.net import softmax_vertex
+
+    # Generate classes for each desired vertex.
+    TokenVertex = keyed_source_vertex(dims, reprs)
+    # Composes two vertices of a desired dimensionality.
+    CompVertex = rnn_vertex(dims, 2)
+    # Predict one out of several sentiment labels.
+    SentVertex = softmax_vertex(len(labels), dims)
+
+    from nerv.net import net_model
+
+    # Generate a model class that is applicable to our vertices.
+    Model = net_model((TokenVertex, CompVertex, SentVertex))
+
+    from nerv.net import Net
+
+    # Let us now construct a net for our example sentence.
+    net = Net()
+
+    # The sources in our DAG, the tokens.
+    this   = TokenVertex('This')
+    burger = TokenVertex('burger')
+    is_    = TokenVertex('is')
+    nt     = TokenVertex("n't")
+    bad    = TokenVertex('bad')
+
+    # Add a vertex predicting the sentiment for each token.
+    net.add_edge(this  , SentVertex(neutral))
+    net.add_edge(burger, SentVertex(neutral))
+    net.add_edge(is_   , SentVertex(neutral))
+    net.add_edge(nt    , SentVertex(neutral))
+    net.add_edge(bad   , SentVertex(very_neg))
+
+    # The first level of composition.
+    this_burger = CompVertex()
+    is_nt       = CompVertex()
+    net.add_edge(this  , this_burger)
+    net.add_edge(burger, this_burger)
+    net.add_edge(is_   , is_nt)
+    net.add_edge(nt    , is_nt)
+
+    # Attach a vertex predicting the sentiment for each composed vertex.
+    net.add_edge(this_burger, SentVertex(neutral))
+    net.add_edge(is_nt      , SentVertex(neg))
+
+    # Rince and repeat.
+    is_nt_bad             = CompVertex()
+    this_burger_is_nt_bad = CompVertex()
+    net.add_edge(is_nt      , is_nt_bad)
+    net.add_edge(bad        , is_nt_bad)
+    net.add_edge(this_burger, this_burger_is_nt_bad)
+    net.add_edge(is_nt_bad  , this_burger_is_nt_bad)
+    net.add_edge(is_nt_bad  , SentVertex(pos))
+    sent_sentiment = SentVertex(pos)
+    net.add_edge(this_burger_is_nt_bad, sent_sentiment)
+
+    # We can now initialise a model and apply it to the net.
+    model = Model()
+    model.forward(net)
+
+    # Each SentVertex will now carry a prediction, for example:
+    sent_sentiment.activations
+
+    # Returns the current loss and gradient for a given set of parameters.
+    def f(params):
+        # It is not necessary to make an explicit update here if you send
+        #   the model parameters to the minimisation function since it will
+        #   do this internally at each step.
+        #model.params[:] = params
+        # Any mini-batch logic would go here.
+        (loss, grad) = model.loss_and_gradient((net, ))
+        # Add any desired regularisation here.
+        return (loss, grad.params)
+
+    from nerv.optimise import fmin_adagrad
+
+    iteration = 0
+    for _, loss, _ in fmin_adagrad(f, model.params):
+        iteration += 1
+        # Uncomment to inspect the loss, it should go down rapidly.
+        #print(loss.total())
+        if iteration >= 42:
+            break
+    # At this point you have a, somewhat, trained model.
+```
+
 # Installation #
 
 ## Required ##
