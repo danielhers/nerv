@@ -1,13 +1,12 @@
 **nerv**, modelling composition for Directed Acyclic Graphs in Python.
 
-**Warning:** This is largely **unsupported** software, no extensions are
-planned and development has stopped. It is however fully functional and has
-served as a test-bed for compositional models between 2012 and 2014. Designing
-a Python library like this that is performant, easy to debug and elegant
-is difficult. The main author has now switched to using [Julia][julia]
-for most of his research, but it is not entirely unlikely that he may take
-another stab at a library similar to nerve, if time permits it, over the next
-few years.
+This is largely **unsupported** software, no extensions are planned and
+development has stopped. It is however **fully functional** and has served as
+a test-bed for compositional models between 2012 and 2014. Designing a Python
+library like this that is performant, easy to debug and elegant is difficult.
+The main author has now switched to using [Julia][julia] for most of his
+research, but it is not entirely unlikely that he may take another stab
+at a library similar to nerve, if time permits it, over the next few years.
 
 [julia]: http://julialang.org/
 
