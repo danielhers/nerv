@@ -227,4 +227,7 @@ credit, the best way to do so is probably to cite
         month       = {December},
     }
 
-since this library served as the basis for the model presented in the paper.
+since this library served as the basis for the model presented in
+the [paper][stenetorp2013transition].
+
+[stenetorp2013transition]: http://pontus.stenetorp.se/res/pdf/stenetorp2013transition.pdf
