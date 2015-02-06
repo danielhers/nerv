@@ -12,10 +12,19 @@ at a library similar to nerve, if time permits it, over the next few years.
 
 # Usage #
 
+We will use a [Stanford Sentiment Treebank][sst]-like example where we have
+the phrase "This burger isn't bad" and annotate each sub-phrase of the sentence
+with a sentiment label.
+
+![A visualisation of our example sentence.][burger]
+
+Once we have created this compositional structure, we will show how to train a
+model to predict the composition and sentiment of the example sentence.
+
+[sst]: http://nlp.stanford.edu/sentiment/treebank.html
+[burger]: https://raw.githubusercontent.com/ninjin/nerv/master/img/burger_tree_sent.png
+
 ```python
-    # We will use a Stanford Sentiment Treebank-like example where we have the
-    #   phrase "This burger isn't bad" and annotate each sub-phrase of
-    #   the sentence with a sentiment label.
     tokens = set(('This', 'burger', 'is', "n't", 'bad'))
 
     # The dimensionality of our token representations.
