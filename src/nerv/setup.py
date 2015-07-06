@@ -18,9 +18,6 @@ cy_extensions = cythonise([
                 'blas',
                 ],
             ),
-        Extension('cy_dag',
-            sources=['cy/cy_dag.pyx', ],
-            ),
         ])
 
 setup(
