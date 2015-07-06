@@ -112,6 +112,7 @@ def keyed_source_vertex(dims, dic, missing_='<unk>', name_='keyed'):
     source_size = len(dic) * dims
 
     # Create a mapping between key and weight array region.
+    assert missing_ in dic, "%s not present in dictionary" % missing_
     _slice_by_key = FallbackDict(missing_)
     for i, key in enumerate(dic):
         start = i * dims
@@ -176,9 +177,12 @@ def softmax_vertex(fan_out_, fan_in_, name_='softmax'):
             self.target = target
 
         def forward(self, net, model, loss=None):
+            parents = net.parents[self]
+            size_sum = sum(parent.activations.size for parent in parents)
+            assert fan_in_ == size_sum, "fan in mismatch: %d != %d" % (fan_in_, size_sum)
             offset = 0
             input_ = empty((fan_in_, 1))
-            for parent in net.parents[self]:
+            for parent in parents:
                 size = parent.activations.size
                 input_[offset:offset + size] = parent.activations
                 offset += size
@@ -230,9 +234,12 @@ def rnn_vertex(dim, num_inputs_, name_='rnn'):
             return weights
 
         def forward(self, net, model, loss=None):
+            parents = net.parents[self]
+            size_sum = sum(parent.activations.size for parent in parents)
+            assert fan_in_ == size_sum, "fan in mismatch: %d != %d" % (fan_in_, size_sum)
             input_ = empty((fan_in_, 1))
             offset = 0
-            for parent in net.parents[self]:
+            for parent in parents:
                 size = parent.activations.size
                 input_[offset:offset + size] = parent.activations
                 offset += size

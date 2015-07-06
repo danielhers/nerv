@@ -6,7 +6,7 @@ a test-bed for compositional models between 2012 and 2014. Designing a Python
 library like this that is performant, easy to debug and elegant is difficult.
 The main author has now switched to using [Julia][julia] for most of his
 research, but it is not entirely unlikely that he may take another stab
-at a library similar to nerve, if time permits it, over the next few years.
+at a library similar to nerv, if time permits it, over the next few years.
 
 [julia]: http://julialang.org/
 
@@ -98,7 +98,7 @@ model to predict the composition and sentiment of the example sentence.
     net.add_edge(this_burger, SentVertex(neutral))
     net.add_edge(is_nt      , SentVertex(neg))
 
-    # Rince and repeat.
+    # Rinse and repeat.
     is_nt_bad             = CompVertex()
     this_burger_is_nt_bad = CompVertex()
     net.add_edge(is_nt      , is_nt_bad)
@@ -204,7 +204,7 @@ read highly optimised research code or deriving methods from papers.
 
 Simply put, we aim for:
 
-1. Easy of use.
+1. Ease of use.
 2. General applicability.
 3. Performance.
 
