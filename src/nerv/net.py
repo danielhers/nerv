@@ -16,6 +16,7 @@ from copy import deepcopy
 from math import fsum
 
 from numpy import dot
+from numpy import mean
 from numpy import empty
 from numpy import multiply
 from numpy import product
@@ -282,6 +283,62 @@ def rnn_vertex(dim, num_inputs_, name_='rnn'):
     globals()[RNNVertex.__name__] = RNNVertex
 
     return RNNVertex
+
+# TODO: Could be handed activation function, etc.?
+def average_vertex(dim, name_='average'):
+    fan_out_ = dim
+    fan_in_ = dim
+
+    class AverageVertex(Vertex):
+        name = name_
+        fan_out = fan_out_
+        fan_in = fan_in_
+
+        @classmethod
+        def init(cls, weights):
+            weights = weights.reshape(cls.weights_shape())
+            weights[:] = socher_2013_comp_mtrx(cls.fan_out, 1)
+            return weights
+
+        def forward(self, net, model, loss=None):
+            parents = net.parents[self]
+            input_ = empty((fan_in_, len(parents)))
+            for i, parent in enumerate(parents):
+                input_[:, i] = parent.activations.squeeze()
+
+            # Calculate the activations.
+            activations = dot(model.weight[name_], input_)
+            activations = mean(activations, axis=1).reshape(-1, 1)
+            activations += model.bias[name_]
+            tanh(activations, out=activations)
+
+            self.input = input_
+            self.activations = activations
+
+        def backward(self, net, model, gradient):
+            children = net.children[self]
+            if not children:
+                self.message[:] = 0
+                return
+
+            # Collect the incoming message from all children.
+            incoming_message = zeros((fan_out_, 1))
+            for child in children:
+                incoming_message += child.message
+
+            # Calculate the gradients.
+            back = tanh_prime(self.activations) * incoming_message
+            dger(1.0, self.input.T, back.T, a=gradient.weight[name_].T,
+                 overwrite_a=True)
+            gradient.bias[name_] += back
+
+            self.message = dot(transpose(model.weight[name_]), back)
+
+
+    # XXX: Enormous hack, will fail if more than one kind is created...
+    globals()[AverageVertex.__name__] = AverageVertex
+
+    return AverageVertex
 
 
 def net_model(_vertice_classes):
