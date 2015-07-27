@@ -170,13 +170,13 @@ on your hardware.
 Most likely you want to use OpenBLAS as your BLAS back-end, it is fast (albeit
 maybe not always the most reliable):
 
-    sudo apt-get libopenblas-base
+    sudo apt-get install libopenblas-base
 
 ### Cython ###
 
 You can improve the speed of the library using Cython, but it is not required:
 
-    sudo apt-get cython3 libopenblas-dev
+    sudo apt-get install cython3 libopenblas-dev
     make
 
 ### line\_profiler ###
