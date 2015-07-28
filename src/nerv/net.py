@@ -302,12 +302,19 @@ def average_vertex(dim, name_='average'):
 
         def forward(self, net, model, loss=None):
             parents = net.parents[self]
-            input_ = empty((fan_in_, len(parents)))
-            for i, parent in enumerate(parents):
-                input_[:, i] = parent.activations.squeeze()
+            # input_ = empty((fan_in_, len(parents)))
+            # for i, parent in enumerate(parents):
+            #     input_[:, i] = parent.activations.squeeze()
+            size_sum = sum(parent.activations.size for parent in parents)
+            input_ = empty((size_sum, 1))
+            offset = 0
+            for parent in parents:
+                size = parent.activations.size
+                input_[offset:offset + size] = parent.activations
+                offset += size
 
             # Calculate the activations.
-            activations = dot(model.weight[name_], input_)
+            activations = dot(model.weight[name_], input_.reshape(-1, len(parents)))
             activations = mean(activations, axis=1).reshape(-1, 1)
             activations += model.bias[name_]
             tanh(activations, out=activations)
@@ -328,6 +335,7 @@ def average_vertex(dim, name_='average'):
 
             # Calculate the gradients.
             back = tanh_prime(self.activations) * incoming_message
+            # gradient.weight[name_] = back.T * self.input + gradient.weight[name_]
             dger(1.0, self.input.T, back.T, a=gradient.weight[name_].T,
                  overwrite_a=True)
             gradient.bias[name_] += back

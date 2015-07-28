@@ -8,7 +8,8 @@ import operator
 from collections import OrderedDict
 from numpy import array
 
-from ucca import layer0, layer1
+from ucca import layer0
+from ucca import layer1
 from util import file2passage
 from nerv.net import keyed_source_vertex
 from nerv.net import average_vertex
@@ -16,6 +17,7 @@ from nerv.net import softmax_vertex
 from nerv.net import net_model
 from nerv.net import Net
 from nerv.init import random_uniform
+from nerv.optimise import fmin_adagrad
 
 desc = """Parses an XML in UCCA standard format, and creates a nerv DAG net model.
 """
@@ -56,10 +58,25 @@ def create_model(passage):
             net.add_edge(vertices[child.ID], vertices[unit.ID])
 
     model = Model()
-    model.forward(net)
-    print(labels["1.1"].activations)
+    return model, net, labels["1.1"]
 
-    return model
+
+def train(model, net):
+    # Returns the current loss and gradient for a given set of parameters.
+    def f(params):
+        # Any mini-batch logic would go here.
+        (loss, grad) = model.loss_and_gradient((net, ))
+        # Add any desired regularisation here.
+        return (loss, grad.params)
+
+    iteration = 0
+    for _, loss, _ in fmin_adagrad(f, model.params):
+        iteration += 1
+        # Uncomment to inspect the loss, it should go down rapidly.
+        print(loss.total())
+        if iteration >= 42:
+            break
+    # At this point you have a, somewhat, trained model.
 
 
 def main():
@@ -69,7 +86,14 @@ def main():
 
     for filename in args.filenames:
         passage = file2passage(filename)
-        output = create_model(passage)
+
+        model, net, root = create_model(passage)
+        model.forward(net)
+        print(root.activations)
+
+        train(model, net)
+        model.forward(net)
+        print(root.activations)
 
     sys.exit(0)
 
